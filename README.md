@@ -12,8 +12,9 @@ $ git clone https://github.com/ETH3D/badslam
 
 ## Load cmake dependencies
 ```
-$ module load new gcc/4.8.2 cmake/3.11.4
+$ module load cmake/3.9.4
 ```
+If issues arise with gcc or cmake versions take a look here: https://scicomp.ethz.ch/wiki/Leonhard_applications_and_libraries
 
 ## Build instructions for linux
 ```
