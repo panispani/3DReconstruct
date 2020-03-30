@@ -117,7 +117,7 @@ plug camera back in
 
 Install uvcdynctrl package which installs suitable udev rules to initialize the missing controls from userspace.
 ```
-sudo apt install uvcdynctrl
+sudo apt install uvcdynctrl v4l-utils
 ```
 
 Camera doesn't work on USB3.0
@@ -137,14 +137,21 @@ glxinfo | grep "OpenGL version"
 glxinfo | grep "version"
 ```
 
+The depth engine doesn't work. Turning off the depth camera makes everything work. The depth engine is not included in the SDK and can be installed using https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/depthengine.md
+
 OpenGL 3.1 on laptop
 
-3 ideas:
+Depth engine is included in libk4a1.1-dev but is failed at initialization because of the OpenGL 4.4 error. This is what we need to fix.
+Can we fix this
+## Remove oibaf drivers and see if the default ones support opengl 4.4
+```
+sudo apt install ppa-purge
+sudo ppa-purge ppa:oibaf/graphics-drivers
+sudo apt-get update && sudo apt-get upgrade
+```
 
-openGL stuff
-
+Read instructions on
 https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md
-
 use the API directly
 
 
