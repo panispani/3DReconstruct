@@ -31,11 +31,11 @@ sudo apt install libk4a1.1-dev
 The SDK is now ready to use! You can test it by recording for 5 seconds. By default, the recorder uses the NFOV Unbinned depth mode and outputs 1080p RGB at 30 fps including IMU data.
 
 ```
-k4arecorder -l 5 output.mkv
+sudo k4arecorder -l 5 output.mkv
 ```
 or just use the GUI to view and record (better to see if the camera is properly configured)
 ```
-k4aviewer
+sudo k4aviewer
 ```
 
 ## Troubleshooting ubuntu problems
@@ -105,9 +105,48 @@ and
 [ 3650.728406] uvcvideo 8-1.2:1.0: Entity type for entity Processing 3 was not initialized!
 [ 3650.728410] uvcvideo 8-1.2:1.0: Entity type for entity Camera 1 was not initialized!
 
+### Things to try
 
-Can't detect connected device...
-- see lspcpu see connected devices
-- see instructions for azure kinect, if we forgot anything
+You can try to removing and adding the kernel module
+```
+sudo rmmod uvcvideo
+sudo modprobe uvcvideo
+unplug camera from USB port
+plug camera back in
+```
+
+Install uvcdynctrl package which installs suitable udev rules to initialize the missing controls from userspace.
+```
+sudo apt install uvcdynctrl
+```
+
+Camera doesn't work on USB3.0
+
+Only the microphone works
+
+Current status: Error: OpenGL 4.4 context creation failed. You could try updating your graphics drivers.
+find graphics card
+```
+lspci | grep VGA
+```
+
+Check openGL version
+```
+sudo apt-get install mesa-utils
+glxinfo | grep "OpenGL version"
+glxinfo | grep "version"
+```
+
+OpenGL 3.1 on laptop
+
+3 ideas:
+
+openGL stuff
+
+https://github.com/microsoft/Azure-Kinect-Sensor-SDK/blob/develop/docs/usage.md
+
+use the API directly
+
+
 
 
