@@ -1,5 +1,24 @@
+%% Register depth and color frames
+% Loop and repeat over all
+% Load depth and color frame
+% Register
+% Save, Same directories just prefix with reg*
+disp("Starting registration");
+dirs = ["../recordings/ball/scan1"]; % find with by searching for all dirs that have out.mkv
+for d=1:length(dirs)
+    dir = dirs(d);
+    num = "0001"; % loop over all numbers
+    colffilename = dir + "/color/color" + num + ".png";
+    depthffilename = dir + "/depth/depth" + num + ".png";
+    rgbData = imread(colffilename);
+    depthData = imread(depthffilename);
+    disp(size(rgbData));
+    disp(size(depthData));
+end
+
+%% Function definition
 function [aligned] = ...
-                    depth_rgb_registration(depthData, rgbData,...
+                    depth_rgb_registration2(depthData, rgbData,...
                     fx_d, fy_d, cx_d, cy_d,...
                     fx_rgb, fy_rgb, cx_rgb, cy_rgb,...
                     extrinsics)
@@ -45,9 +64,9 @@ function [aligned] = ...
             x = round(x);
             y = round(y);
 
-            aligned(v,u,4) = single(rgbData(y, x, 1);
-            aligned(v,u,5) = single(rgbData(y, x, 2);
-            aligned(v,u,6) = single(rgbData(y, x, 3);
+            aligned(v,u,4) = single(rgbData(y, x, 1));
+            aligned(v,u,5) = single(rgbData(y, x, 2));
+            aligned(v,u,6) = single(rgbData(y, x, 3));
         end
     end    
 end
