@@ -28,6 +28,7 @@ If something doesn't seem to work make sure you have the dependencies of the REA
 
 TODO LIST:
 - how does the association look like, what does ORB actually read and look for
+RGB-D input must be synchronized and depth registered, so we need to register before doing this, you need to write some matlab code that does this!
 create depth.txt and rgb.txt from the directories, figure out what that timestamp actually means
 what double timestamp does the TUM dataset use, maybe use the same format and create the association.txt file
 It's UNIX dude... 
@@ -78,3 +79,8 @@ quaternion to R
 https://vision.in.tum.de/data/datasets/rgbd-dataset/file_formats
 then you have t and R of the camera, how do I reverse it again? for all the points. But how do you find the 3D position of each pixel using a depth map? That's another question
 There is conversion code given some depth factor..
+
+
+- just output 3D point cloud for each frame, then remove background and combine all frames from all videos in geometric registration.. you only use slam to put them in the same coordinate frame but you don't really put them in a single frame
+
+- practical kinect calibration
