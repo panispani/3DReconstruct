@@ -25,3 +25,8 @@ $ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CUDA_FLAGS="-arch=sm_61" ..
 $ make -j badslam  # Reduce the number of threads if running out of memory, e.g., -j3
 ```
 If something doesn't seem to work make sure you have the dependencies of the REAMDE.md in badlsam
+
+a.cpp walkthrough
+L:290 playback()
+
+registration is done for us using k4a_transformation_color_image_to_depth_camera()
