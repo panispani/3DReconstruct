@@ -283,6 +283,8 @@ main (int argc, char** argv)
   // We read it from a file instead &&&&&&&<>
   pcl::PointCloud<pcl::PointXYZ>::Ptr basic_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
+  
+/*
   std::cout << "Generating example point clouds.\n\n";
   // We're going to make an ellipse extruded along the z-axis. The colour for
   // the XYZRGB cloud will gradually go from red to green to blue.
@@ -317,10 +319,7 @@ main (int argc, char** argv)
       b += 12;
     }
   }
-  basic_cloud_ptr->width = (int) basic_cloud_ptr->points.size ();
-  basic_cloud_ptr->height = 1;
-  point_cloud_ptr->width = (int) point_cloud_ptr->points.size ();
-  point_cloud_ptr->height = 1;
+*/
 
   //pcl::PointCloud<pcl::PointXYZ>::Ptr basic_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>);
   //pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -342,6 +341,10 @@ main (int argc, char** argv)
               << " "    << cloud->points[i].z << std::endl;
     */
     basic_cloud_ptr = cloud;
+    basic_cloud_ptr->width = (int) basic_cloud_ptr->points.size ();
+    basic_cloud_ptr->height = 1;
+    point_cloud_ptr->width = (int) point_cloud_ptr->points.size (); // for RGB
+    point_cloud_ptr->height = 1;
 
   // ----------------------------------------------------------------
   // -----Calculate surface normals with a search radius of 0.05-----
