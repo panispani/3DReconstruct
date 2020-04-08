@@ -1,6 +1,9 @@
 '''
 Blend 2 images into one
 Used to overlay depth and color frames
+
+Usage example:
+python blend.py depth0001.png color0001.png
 '''
 from PIL import Image
 import sys
