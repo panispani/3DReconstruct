@@ -1,0 +1,124 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+
+# Camera calibration and distortion parameters (OpenCV)
+Camera.fx: 904.141541
+Camera.fy: 903.521362
+Camera.cx: 953.284424
+Camera.cy: 555.142456
+
+Camera.k1: 0.722746
+Camera.k2: -2.885590
+Camera.p1: 0.000783
+Camera.p2: -0.000143
+
+Camera.k3: 1.632723
+Camera.k4: 0.602199
+Camera.k5: -2.719626
+Camera.k6: 1.565053
+
+### CROSS CHECK THIS
+Camera.width: 1920
+Camera.height: 1080
+
+# what is this: IR projector baseline times fx (aprox.)
+# Camera.bf: 40.0
+
+# Camera frames per second
+Camera.fps: 5.0
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+# Close/Far threshold. Baseline times.
+# <> not sure
+ThDepth: 40.0
+
+# Deptmap values factor
+# <> not sure
+DepthMapFactor: 5000.0
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1000
+
+# ORB Extractor: Scale factor between levels in the scale pyramid
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize:2
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3
+Viewer.ViewpointX: 0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -1.8
+Viewer.ViewpointF: 500
+
+
+# OUTPUT
+# DEPTH CAMERA INTRISTICS
+# cx: 332.064270
+# cy: 325.880615
+# fx: 503.927643
+# fy: 503.978729
+# k1: 3.130577
+# k2: 2.324939
+# k3: 0.130416
+# k4: 3.458652
+# k5: 3.350115
+# k6: 0.662942
+# codx: 0.000000
+# cody: 0.000000
+# p1: 0.000081
+# p2: -0.000051
+# ----------------------------
+# COLOR CAMERA INTRISTICS
+# cx: 953.284424
+# cy: 555.142456
+# fx: 904.141541
+# fy: 903.521362
+# k1: 0.722746
+# k2: -2.885590
+# k3: 1.632723
+# k4: 0.602199
+# k5: -2.719626
+# k6: 1.565053
+# codx: 0.000000
+# cody: 0.000000
+# p1: 0.000783
+# p2: -0.000143
+# ----------------------------
+# COLOR CAMERA EXTRINSICS
+# r11: 0.999999
+# r12: -0.001203
+# r13: -0.001137
+# r21: 0.001308
+# r22: 0.995253
+# r23: 0.097314
+# r31: 0.001015
+# r32: -0.097315
+# r33: 0.995253
+# t1: -32.083916
+# t2: -1.908224
+# t3: 4.096729
