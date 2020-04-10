@@ -200,14 +200,15 @@ static bool point_cloud_depth_to_color(k4a_transformation_t transformation_handl
 }
 
 // Timestamp in milliseconds. Defaults to 1 sec as the first couple frames don't contain color
-static int playback(char* input_path, int timestamp = 1000, std::string output_filename = "output.ply")
+//static int pointcloudmode(char* input_path, int timestamp = 1000, std::string output_filename = "output.ply")
+static int framemode(std::string input_path)
 {
     /* Predef of params */
     float r11, r12, r13, r21, r22, r23, r31, r32, r33, t1, t2, t3;
     float cx, cy, fx, fy, k1, k2, k3, k4, k5, k6, codx, cody, p1, p2;
     const k4a_calibration_intrinsic_parameters_t* params;
-
     int returnCode = 1;
+    int timestamp;
     k4a_playback_t playback = NULL;
     k4a_calibration_t calibration; // <>
     k4a_transformation_t transformation = NULL;
@@ -215,41 +216,159 @@ static int playback(char* input_path, int timestamp = 1000, std::string output_f
     k4a_image_t depth_image = NULL;
     k4a_image_t color_image = NULL;
     k4a_image_t uncompressed_color_image = NULL;
-
     k4a_result_t result;
     k4a_stream_result_t stream_result;
+    double now = (double)std::time(0);
+    std::string assocFile;
+    std::ofstream fout;
+    int fps = 40; // 30 fps
+    k4a_record_configuration_t config;
 
+    std::string tmp = input_path + "out.mkv";
     // Open recording
-    result = k4a_playback_open(input_path, &playback);
+    result = k4a_playback_open(tmp.c_str(), &playback);
     if (result != K4A_RESULT_SUCCEEDED || playback == NULL)
     {
-        printf("Failed to open recording %s\n", input_path);
+        printf("Failed to open recording %s\n", input_path.c_str());
         goto Exit;
     }
-
+    // loop over timestamps
+    assocFile = (std::string)input_path + "associations.txt";
+    fout.open(assocFile);
+    timestamp = 1000;
     result = k4a_playback_seek_timestamp(playback, timestamp * 1000, K4A_PLAYBACK_SEEK_BEGIN);
-    if (result != K4A_RESULT_SUCCEEDED)
-    {
-        printf("Failed to seek timestamp %d\n", timestamp);
-        goto Exit;
-    }
-    printf("Seeking to timestamp: %d/%d (ms)\n",
-        timestamp,
-        (int)(k4a_playback_get_recording_length_usec(playback) / 1000));
+    // create rgb and depth directories
+    // TODO, created for us in this case by python script
+    while (result == K4A_RESULT_SUCCEEDED) {
+        printf("Seeking to timestamp: %d/%d (ms)\n",
+            timestamp,
+            (int)(k4a_playback_get_recording_length_usec(playback) / 1000));
 
-    stream_result = k4a_playback_get_next_capture(playback, &capture);
-    if (stream_result != K4A_STREAM_RESULT_SUCCEEDED || capture == NULL)
-    {
-        printf("Failed to fetch frame\n");
-        goto Exit;
+        result = k4a_playback_get_record_configuration(playback, &config);
+        if (result != K4A_RESULT_SUCCEEDED)
+        {
+            printf("Failed to get record config\n");
+            goto Exit;
+        }
+        printf("Is the IMU enabled: %d\n", config.imu_track_enabled);
+
+        // Get next capture
+        // PRINT CALIBRATION PARAMETERS
+        // get new calibration params
+        if (K4A_RESULT_SUCCEEDED != k4a_playback_get_calibration(playback, &calibration))
+        {
+            printf("Failed to get calibration\n");
+            goto Exit;
+        }
+        printf("[%f,%f,%f]\n", calibration.depth_camera_calibration.extrinsics.rotation[0], calibration.depth_camera_calibration.extrinsics.rotation[1], calibration.depth_camera_calibration.extrinsics.rotation[2]);
+        printf("[%f,%f,%f]\n", calibration.depth_camera_calibration.extrinsics.rotation[3], calibration.depth_camera_calibration.extrinsics.rotation[4], calibration.depth_camera_calibration.extrinsics.rotation[5]);
+        printf("[%f,%f,%f]\n", calibration.depth_camera_calibration.extrinsics.rotation[6], calibration.depth_camera_calibration.extrinsics.rotation[7], calibration.depth_camera_calibration.extrinsics.rotation[8]);
+        printf("%f,%f,%f\n", calibration.depth_camera_calibration.extrinsics.translation[0], calibration.depth_camera_calibration.extrinsics.translation[1], calibration.depth_camera_calibration.extrinsics.translation[2]);
+
+        stream_result = k4a_playback_get_next_capture(playback, &capture);
+        if (stream_result != K4A_STREAM_RESULT_SUCCEEDED || capture == NULL)
+        {
+            printf("Failed to fetch frame\n");
+            break;
+        }
+        // <> get calibration from playback
+        if (K4A_RESULT_SUCCEEDED != k4a_playback_get_calibration(playback, &calibration))
+        {
+            printf("Failed to get calibration\n");
+            goto Exit;
+        }
+
+        // <> create transformation from one camera to the other
+        transformation = k4a_transformation_create(&calibration);
+
+        // Fetch depth frame
+        depth_image = k4a_capture_get_depth_image(capture);
+        if (depth_image == 0)
+        {
+            printf("Failed to get depth image from capture\n");
+            goto Exit;
+        }
+        // Fetch color frame
+        color_image = k4a_capture_get_color_image(capture);
+        if (color_image == 0)
+        {
+            printf("Failed to get color image from capture\n");
+            goto Exit;
+        }
+
+        ///////////////////////////////
+        // Convert color frame from mjpeg to bgra
+        k4a_image_format_t format;
+        format = k4a_image_get_format(color_image);
+        if (format != K4A_IMAGE_FORMAT_COLOR_MJPG)
+        {
+            printf("Color format not supported. Please use MJPEG\n");
+            goto Exit;
+        }
+
+        int color_width, color_height;
+        color_width = k4a_image_get_width_pixels(color_image);
+        color_height = k4a_image_get_height_pixels(color_image);
+
+        if (K4A_RESULT_SUCCEEDED != k4a_image_create(K4A_IMAGE_FORMAT_COLOR_BGRA32,
+            color_width,
+            color_height,
+            color_width * 4 * (int)sizeof(uint8_t),
+            &uncompressed_color_image))
+        {
+            printf("Failed to create image buffer\n");
+            goto Exit;
+        }
+
+        // <>MAYBE HERE WE CAN REGISTER THE DEPTH AND RGB FRAMES
+        tjhandle tjHandle;
+        tjHandle = tjInitDecompress();
+        if (tjDecompress2(tjHandle,
+            k4a_image_get_buffer(color_image),
+            static_cast<unsigned long>(k4a_image_get_size(color_image)),
+            k4a_image_get_buffer(uncompressed_color_image),
+            color_width,
+            0, // pitch
+            color_height,
+            TJPF_BGRA,
+            TJFLAG_FASTDCT | TJFLAG_FASTUPSAMPLE) != 0)
+        {
+            printf("Failed to decompress color frame\n");
+            if (tjDestroy(tjHandle))
+            {
+                printf("Failed to destroy turboJPEG handle\n");
+            }
+            goto Exit;
+        }
+        if (tjDestroy(tjHandle))
+        {
+            printf("Failed to destroy turboJPEG handle\n");
+        }
+        ///////////////////////////////
+
+        // THIS IS THE ONLY FUNCTION CALL THAT IS DIFFERENT IN THE TWO FUNCTIONS
+        // Compute color point cloud by warping depth image into color camera geometry
+        //if (point_cloud_depth_to_color(transformation, depth_image, uncompressed_color_image, output_filename) == false)
+        std::string snow = std::to_string(now);
+        if (save_matching_frames(transformation, depth_image, uncompressed_color_image, input_path, snow) == false)
+        {
+            printf("Failed to transform depth to color\n");
+            goto Exit;
+        }
+        fout << snow << " color/" << snow << ".png " << snow << " depth/" << snow << ".png" << std::endl;
+        printf("%f %d\n", now, timestamp);
+        now += 1.0 / (double)fps;
+        timestamp += round(1000.0 / (double)fps);
+        printf("%f %d\n", now, timestamp);
+        result = k4a_playback_seek_timestamp(playback, 1000 * timestamp, K4A_PLAYBACK_SEEK_BEGIN);
     }
-    // <> get calibration from playback
-    if (K4A_RESULT_SUCCEEDED != k4a_playback_get_calibration(playback, &calibration))
-    {
-        printf("Failed to get calibration\n");
-        goto Exit;
-    }
-    // From calibration you can print the intristic information of both cameras
+    fout.close();
+    printf("Failed to seek frame at %d seconds\n", timestamp / 1000);
+
+    // CALIBRATION INFORMATION
+    printf("----------------------------\n");
+    printf("CALIBRATION INFORMATION:\n");
+    printf("----------------------------\n");
     printf("DEPTH CAMERA INTRISTICS\n");
     const k4a_calibration_camera_t depth_camera = calibration.depth_camera_calibration;
     params = &depth_camera.intrinsics.parameters;
@@ -341,81 +460,6 @@ static int playback(char* input_path, int timestamp = 1000, std::string output_f
     printf("t3: %f\n", t3);
     printf("----------------------------\n");
 
-    // <> created transformation
-    transformation = k4a_transformation_create(&calibration);
-
-    // Fetch depth and color frame
-    depth_image = k4a_capture_get_depth_image(capture);
-    if (depth_image == 0)
-    {
-        printf("Failed to get depth image from capture\n");
-        goto Exit;
-    }
-
-    color_image = k4a_capture_get_color_image(capture);
-    if (color_image == 0)
-    {
-        printf("Failed to get color image from capture\n");
-        goto Exit;
-    }
-
-    ///////////////////////////////
-    // Convert color frame from mjpeg to bgra
-    k4a_image_format_t format;
-    format = k4a_image_get_format(color_image);
-    if (format != K4A_IMAGE_FORMAT_COLOR_MJPG)
-    {
-        printf("Color format not supported. Please use MJPEG\n");
-        goto Exit;
-    }
-
-    int color_width, color_height;
-    color_width = k4a_image_get_width_pixels(color_image);
-    color_height = k4a_image_get_height_pixels(color_image);
-
-    if (K4A_RESULT_SUCCEEDED != k4a_image_create(K4A_IMAGE_FORMAT_COLOR_BGRA32,
-        color_width,
-        color_height,
-        color_width * 4 * (int)sizeof(uint8_t),
-        &uncompressed_color_image))
-    {
-        printf("Failed to create image buffer\n");
-        goto Exit;
-    }
-
-    // <>MAYBE HERE WE CAN REGISTER THE DEPTH AND RGB FRAMES
-    tjhandle tjHandle;
-    tjHandle = tjInitDecompress();
-    if (tjDecompress2(tjHandle,
-        k4a_image_get_buffer(color_image),
-        static_cast<unsigned long>(k4a_image_get_size(color_image)),
-        k4a_image_get_buffer(uncompressed_color_image),
-        color_width,
-        0, // pitch
-        color_height,
-        TJPF_BGRA,
-        TJFLAG_FASTDCT | TJFLAG_FASTUPSAMPLE) != 0)
-    {
-        printf("Failed to decompress color frame\n");
-        if (tjDestroy(tjHandle))
-        {
-            printf("Failed to destroy turboJPEG handle\n");
-        }
-        goto Exit;
-    }
-    if (tjDestroy(tjHandle))
-    {
-        printf("Failed to destroy turboJPEG handle\n");
-    }
-    ///////////////////////////////
-
-    // Compute color point cloud by warping depth image into color camera geometry
-    if (point_cloud_depth_to_color(transformation, depth_image, uncompressed_color_image, output_filename) == false)
-    {
-        printf("Failed to transform depth to color\n");
-        goto Exit;
-    }
-
     returnCode = 0;
 
 Exit:
@@ -467,17 +511,17 @@ int main(int argc, char** argv)
     else
     {
         std::string mode = std::string(argv[1]);
-        if (mode == "frames")
-        {
-            printf("FRAME MODE\n");
-            printf("UNIMPLEMENTED\n");
-        }
-        else if (mode == "pointcloud")
+        if (mode == "pointcloud")
         {
             printf("POINTCLOUD MODE\n");
+            printf("UNIMPLEMENTED\n");
+        }
+        else if (mode == "frame")
+        {
+            printf("FRAME MODE\n");
             if (argc == 3)
             {
-                returnCode = playback(argv[2]);
+                returnCode = framemode(argv[2]);
             }
             else
             {
