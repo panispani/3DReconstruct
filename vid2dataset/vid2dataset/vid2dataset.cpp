@@ -6,6 +6,8 @@
 #include <string>
 #include "transformation_helpers.h"
 #include <fstream>
+#include <iostream>
+#include <ctime>
 #include "turbojpeg.h"
 //#include <turbojpeg.h>
 #include <opencv2/core/core.hpp>
@@ -13,60 +15,48 @@
 #include <opencv2/imgproc/imgproc.hpp>
 using namespace cv;
 
-static bool point_cloud_color_to_depth(k4a_transformation_t transformation_handle,
+static bool save_matching_frames(k4a_transformation_t transformation_handle,
     const k4a_image_t depth_image,
     const k4a_image_t color_image,
-    std::string file_name)
+    std::string input_path,
+    std::string filename)
 {
-    int depth_image_width_pixels = k4a_image_get_width_pixels(depth_image);
-    int depth_image_height_pixels = k4a_image_get_height_pixels(depth_image);
-    k4a_image_t transformed_color_image = NULL;
-    if (K4A_RESULT_SUCCEEDED != k4a_image_create(K4A_IMAGE_FORMAT_COLOR_BGRA32,
-        depth_image_width_pixels,
-        depth_image_height_pixels,
-        depth_image_width_pixels * 4 * (int)sizeof(uint8_t),
-        &transformed_color_image))
+    // COLOR IMAGE DIMENSIONS
+    int color_image_width_pixels = k4a_image_get_width_pixels(color_image);
+    int color_image_height_pixels = k4a_image_get_height_pixels(color_image);
+    // CREATE NEW TRANSFORMED DEPTH IMAGE
+    k4a_image_t transformed_depth_image = NULL;
+    if (K4A_RESULT_SUCCEEDED != k4a_image_create(K4A_IMAGE_FORMAT_DEPTH16,
+        color_image_width_pixels,
+        color_image_height_pixels,
+        color_image_width_pixels * (int)sizeof(uint16_t),
+        &transformed_depth_image))
     {
-        printf("Failed to create transformed color image\n");
+        printf("Failed to create transformed depth image\n");
+        return false;
+    }
+    // Transform depth image into color camera geometry
+    if (K4A_RESULT_SUCCEEDED !=
+        k4a_transformation_depth_image_to_color_camera(transformation_handle, depth_image, transformed_depth_image))
+    {
+        printf("Failed to compute transformed depth image\n");
         return false;
     }
 
-    k4a_image_t point_cloud_image = NULL;
-    if (K4A_RESULT_SUCCEEDED != k4a_image_create(K4A_IMAGE_FORMAT_CUSTOM,
-        depth_image_width_pixels,
-        depth_image_height_pixels,
-        depth_image_width_pixels * 3 * (int)sizeof(int16_t),
-        &point_cloud_image))
-    {
-        printf("Failed to create point cloud image\n");
-        return false;
-    }
+    // SAVE DEPTH FRAME
+    uint8_t* buffer = k4a_image_get_buffer(transformed_depth_image);
+    uint16_t* depth_buffer = reinterpret_cast<uint16_t*>(buffer);
+    cv::Mat depth_frame = cv::Mat(color_image_height_pixels, color_image_width_pixels, CV_16UC1, depth_buffer, cv::Mat::AUTO_STEP);
+    imwrite(input_path + "/depth/" + filename + ".png", depth_frame);
 
-    // <> registration can be done for us, just find a way to save that image
-    if (K4A_RESULT_SUCCEEDED != k4a_transformation_color_image_to_depth_camera(transformation_handle,
-        depth_image,
-        color_image,
-        transformed_color_image))
-    {
-        printf("Failed to compute transformed color image\n");
-        return false;
-    }
+    // SAVE COLOR FRAME
+    uint8_t* color_buffer = (uint8_t*)(void*)k4a_image_get_buffer(color_image);
+    cv::Mat color_frame = cv::Mat(color_image_height_pixels, color_image_width_pixels, CV_8UC4, color_buffer, cv::Mat::AUTO_STEP);
+    imwrite(input_path + "/color/" + filename + ".png", color_frame);
 
-    if (K4A_RESULT_SUCCEEDED != k4a_transformation_depth_image_to_point_cloud(transformation_handle,
-        depth_image,
-        K4A_CALIBRATION_TYPE_DEPTH,
-        point_cloud_image))
-    {
-        printf("Failed to compute point cloud\n");
-        return false;
-    }
-
-    tranformation_helpers_write_point_cloud(point_cloud_image, transformed_color_image, file_name.c_str());
-
-    k4a_image_release(transformed_color_image);
-    k4a_image_release(point_cloud_image);
-
+    k4a_image_release(transformed_depth_image);
     return true;
+
 }
 
 static bool point_cloud_depth_to_color(k4a_transformation_t transformation_handle,
@@ -106,49 +96,7 @@ static bool point_cloud_depth_to_color(k4a_transformation_t transformation_handl
         printf("Failed to compute transformed depth image\n");
         return false;
     }
-    // <> At this point the depth image has the same dimensions as the color one!! Now save it!
-    /*cv::Mat frame;
-    uint8_t *buffer = k4a_image_get_buffer(transformed_depth_image);
-    uint16_t *depth_buffer = reinterpret_cast<uint16_t *>(buffer);
-    // remove opencv
-    // just print the contents verify the way they are stored, color_image_width_pixels * color_image_height_pixels * channels * sizeof(uint16_t)
-    // just save somehow else, you dont need opencv
-    int channels = 1;
-    cv::Mat mat(color_image_height_pixels, color_image_width_pixels, CV_MAKETYPE(DataType<uint16_t>::type, channels));
-    memcpy(mat.data, depth_buffer, color_image_width_pixels * color_image_height_pixels * channels * sizeof(uint16_t));
-    mat.copyTo(frame);
-    //<>OLD: create_mat_from_buffer<uint16_t>(depth_buffer, color_image_width_pixels,
-    //color_image_height_pixels).copyTo(frame);
-    if (frame.empty())
-    {
-        printf("transformed_depth_image is empty\n");
-    }
-    imwrite("transformed_depth_image.png", frame);*/
-    // <> ceci
 
-    // BAD WAY OF SAVING FRAMES
-    /*
-    uint8_t* buffer = k4a_image_get_buffer(transformed_depth_image);
-    uint16_t* depth_buffer = reinterpret_cast<uint16_t*>(buffer);
-    std::ofstream fout("img.txt");
-    fout << color_image_height_pixels << " " << color_image_width_pixels << " ";
-    for (int i = 0; i < color_image_width_pixels * color_image_height_pixels; i++)
-        fout << depth_buffer[i] << " ";
-    // save the color and the depth frame the same way to verify saving is done correctly
-    std::ofstream fout2("depthTmp.txt");
-    int depth_image_width_pixels = k4a_image_get_width_pixels(depth_image);
-    int depth_image_height_pixels = k4a_image_get_height_pixels(depth_image);
-    buffer = k4a_image_get_buffer(depth_image);
-    depth_buffer = reinterpret_cast<uint16_t*>(buffer);
-    fout2 << depth_image_height_pixels << " " << depth_image_width_pixels << " ";
-    for (int i = 0; i < depth_image_height_pixels * depth_image_width_pixels; i++)
-        fout2 << depth_buffer[i] << " ";
-    std::ofstream fout3("colorTmp.txt");
-    uint8_t* color_buffer = (uint8_t*)(void*)k4a_image_get_buffer(color_image);
-    fout3 << color_image_height_pixels << " " << color_image_width_pixels << " ";
-    for (int i = 0; i < color_image_width_pixels * color_image_height_pixels * 3; i++)
-        fout3 << color_buffer[i] << " ";
-    */
     // GOOD WAY OF SAVING FRAMES WITH OPENCV
     Mat frame;
     uint8_t* buffer = k4a_image_get_buffer(transformed_depth_image);
