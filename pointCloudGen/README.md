@@ -36,7 +36,7 @@ We elaborate on what is useful in each of these directories
 USAGE
 
 ```
-  ./ply2pcd <input.ply> <out.pcd>
+./ply2pcd <input.ply> <out.pcd>
 ```
 
 ARGUMENTS
@@ -48,7 +48,7 @@ ARGUMENTS
 EXAMPLE
 
 ```
-  ./ply2pcd ply2pcd_files/out.ply test_pcd.pcd
+./ply2pcd ply2pcd_files/out.ply test_pcd.pcd
 ```
 
 *pcd\_display\_files*: Source code for displaying .pcd files
@@ -58,7 +58,7 @@ EXAMPLE
 USAGE
 
 ```
-  ./pcd_display -s
+./pcd_display -s
 ```
 
 ARGUMENTS
@@ -80,7 +80,7 @@ This is the most important directory (For the core functionality look at [vid2da
 
 USAGE of the vid2dataset executable
 
--POINTCLOUD MODE
+*-POINTCLOUD MODE*
 
 DESCRIPTION
 
@@ -98,7 +98,7 @@ EXAMPLE
     Save the pointcloud at 2.5 seconds
     ./vid2dataset.exe pointcloud ../recordings/ball/scan1/out.mkv 2500
 
--FRAME MODE
+*-FRAME MODE*
 
 DESCRIPTION
 
@@ -120,13 +120,14 @@ EXAMPLE
     Save the corresponding RGB and D frames from 1.3 to 2.5 at 10 fps
     ./vid2dataset.exe frame ../recordings/ball/scan1/ 10 1300 2500
 
--IMU MODE (UNIMPLEMENTED YET)
+*-IMU MODE (NOT IMPLEMENTED YET)*
 
 DESCRIPTION
 
     Given a desired FPS, this mode translates each frame to a point cloud and using the IMU (accelerometer and gyrometer) combines all the pointclouds on the same coordinate frame.
     WARNING: Using a high FPS or a big time frame can result in huge files!
 USAGE
+
     ./vid2dataset.exe imu <out.mkv> <fps> <timestampFrom> <timestampTo>
 ARGUMENTS
 
@@ -147,11 +148,12 @@ P.S. MAC / Linux users: Believe in yourself and compile everything from scratch.
 
 *rgbd_tum*: Linux executable of rgbd_tum.cc. To use this one must also download the ORB-SLAM2 Vocabulary *ORBVoc.txt* found at [https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary](https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary) - you'll need to extract the *ORBVoc.txt* from the *.tar.gz*.
 
-  USAGE
-  ```
-    ./rgbd_tum <ORB-SLAM2/Vocabulary/ORBvoc.txt> <../registrationInfo/kinect.yaml> <directory> associations.txt
-  ```
-  ARGUMENTS
+USAGE
+
+```
+./rgbd_tum <ORB-SLAM2/Vocabulary/ORBvoc.txt> <../registrationInfo/kinect.yaml> <directory> associations.txt
+```
+ARGUMENTS
 
     <ORB-SLAM2/Vocabulary/ORBvoc.txt>: The vocabulary mentioned above
     <../registrationInfo/kinect.yaml>: File specifying the camera parameters, provided in this repo for the Azure Kinect
