@@ -74,9 +74,9 @@ ARGUMENTS
 
 This is the most important directory (For the core functionality look at [vid2dataset/vid2dataset.cpp](pointCloudGen/vid2dataset/vid2dataset.cpp)). It provides the source code and *Widnows* executable (Executable is located at: [vid2dataset/x64/Debug/vid2dataset.exe](pointCloudGen/vid2dataset/x64/Debug/vid2dataset.exe)) for:
 
-- Pointcloud at a given timestamp in a RGB-D video
-- RGB and Depth corresponding frames given a time segment of the video (To be used as input to SLAM)
-- IMU mode, which tries to compute the extrinsics of the camera using just an accelerometer and a gyrometer
+- Pointcloud at a given timestamp in a RGB-D video (POINTCLOUD MODE)
+- RGB and Depth corresponding frames given a time segment of the video (To be used as input to SLAM) (FRAME MODE)
+- IMU mode, which tries to compute the extrinsics of the camera using just an accelerometer and a gyrometer (IMU MODE)
 
 USAGE of the vid2dataset executable
 
