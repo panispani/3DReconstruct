@@ -84,7 +84,7 @@ USAGE of the vid2dataset executable
 
 DESCRIPTION
 
-    Save the pointcloud of a RGB-D video of at specific timestamp
+    Save the pointcloud of an RGB-D video at a specific timestamp
 USAGE
 
     ./vid2dataset.exe pointcloud <out.mkv> <timestamp>
