@@ -140,3 +140,19 @@ EXAMPLE
     ./vid2dataset.exe imu ../recordings/ball/scan1/out.mkv 10 2000 6700
 
 P.S. MAC / Linux users: Believe in yourself and compile everything from scratch.. or use a VM
+
+- **slam**
+
+*rgbd_tum.cc*: Uses the ORB-SLAM2 ([https://github.com/raulmur/ORB_SLAM2](https://github.com/raulmur/ORB_SLAM2)) to do RGB-D slam and provide us with the camera trajectory, so that we can combine the different pointclouds on the same coordinate frame.
+
+*rgbd_tum*: Linux executable of rgbd_tum.cc. To use this one must also download the ORB-SLAM2 Vocabulary *ORBVoc.txt* found at [https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary](https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary) - you'll need to extract the *ORBVoc.txt* from the *.tar.gz*.
+
+  USAGE
+  ```
+    ./rgbd_tum <ORB-SLAM2/Vocabulary/ORBvoc.txt> <../registrationInfo/kinect.yaml> <directory> associations.txt
+  ```
+  ARGUMENTS
+
+    <ORB-SLAM2/Vocabulary/ORBvoc.txt>: The vocabulary mentioned above
+    <../registrationInfo/kinect.yaml>: File specifying the camera parameters, provided in this repo for the Azure Kinect
+    <directory>: The directory that includes the *depth* and *color* directories as well as the *associations.txt* file
