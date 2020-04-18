@@ -9,7 +9,6 @@
 #include <iostream>
 #include <ctime>
 #include "turbojpeg.h"
-//#include <turbojpeg.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -53,7 +52,6 @@ static bool save_matching_frames(k4a_transformation_t transformation_handle,
     uint8_t* color_buffer = (uint8_t*)(void*)k4a_image_get_buffer(color_image);
     cv::Mat color_frame = cv::Mat(color_image_height_pixels, color_image_width_pixels, CV_8UC4, color_buffer, cv::Mat::AUTO_STEP);
     imwrite(input_path + "/color/" + filename + ".png", color_frame);
-
     k4a_image_release(transformed_depth_image);
     return true;
 
@@ -122,6 +120,7 @@ static int pointcloudmode(std::string input_path, std::string output_filename = 
     int returnCode = 1;
     int timestamp;
     bool a, b, c;
+    int seq = 0;
     k4a_playback_t playback = NULL;
     k4a_calibration_t calibration; // <>
     k4a_transformation_t transformation = NULL;
@@ -132,7 +131,7 @@ static int pointcloudmode(std::string input_path, std::string output_filename = 
     k4a_result_t result;
     k4a_stream_result_t stream_result;
     double now = (double)std::time(0);
-    int fps = 40; // 30 fps
+    int fps = 20; // 30 fps
     k4a_record_configuration_t config;
 
     std::string tmp = input_path + "out.mkv";
@@ -247,12 +246,15 @@ static int pointcloudmode(std::string input_path, std::string output_filename = 
         if (timestamp * 2 > (int)(k4a_playback_get_recording_length_usec(playback) / 1000) && b) {
             b = false;
             ticket = true;
+            seq = 5;
         }
         if (timestamp * 1.5 > (int)(k4a_playback_get_recording_length_usec(playback) / 1000) && c) {
             c = false;
             ticket = true;
         }
-        if (ticket) {
+
+        if (seq > 0) {
+            seq = seq - 1;
             std::string snow = std::to_string(now);
             printf("Saving point cloud...\n");
             if (point_cloud_depth_to_color(transformation, depth_image, uncompressed_color_image, output_filename + snow + ".ply") == false)
@@ -262,6 +264,10 @@ static int pointcloudmode(std::string input_path, std::string output_filename = 
             }
             printf("Saved!\n");
         }
+        else if (!b) {
+            break;
+        }
+
         printf("%f %d\n", now, timestamp);
         now += 1.0 / (double)fps;
         timestamp += round(1000.0 / (double)fps);
@@ -321,7 +327,8 @@ static int framemode(std::string input_path)
     double now = (double)std::time(0);
     std::string assocFile;
     std::ofstream fout;
-    int fps = 40; // 30 fps
+    int fps = 20; // 30 fps
+    int tot = 0;
 
     std::string tmp = input_path + "out.mkv";
     // Open recording
@@ -447,6 +454,9 @@ static int framemode(std::string input_path)
         now += 1.0 / (double)fps;
         timestamp += round(1000.0 / (double)fps);
         printf("%f %d\n", now, timestamp);
+        tot = tot + 1;
+        // save 1000 frames at most
+        if (tot > 1000) break;
         result = k4a_playback_seek_timestamp(playback, 1000 * timestamp, K4A_PLAYBACK_SEEK_BEGIN);
     }
     fout.close();
