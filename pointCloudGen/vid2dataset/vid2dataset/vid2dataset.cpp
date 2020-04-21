@@ -132,7 +132,6 @@ static int pointcloudmode(std::string input_path, int timestamp = 1000)
     k4a_result_t result;
     k4a_stream_result_t stream_result;
     double now = (double)std::time(0);
-    k4a_record_configuration_t config;
 
     std::string tmp = input_path + "out.mkv";
     // Open recording
@@ -272,15 +271,152 @@ Exit:
     return 0;
 }
 
-// Timestamp in milliseconds. Defaults to 1 sec as the first couple frames don't contain color
-static int framemode(std::string input_path)
+static int imumode()
 {
-    /* Predef of params */
+    // k4a_record_configuration_t config;
+    // result = k4a_playback_get_record_configuration(playback, &config);
+    // if (result != K4A_RESULT_SUCCEEDED)
+    // {
+    //     printf("Failed to get record config\n");
+    //     goto Exit;
+    // }
+    // printf("Is the IMU enabled: %d\n", config.imu_track_enabled);
+}
+
+static int print_calibration_information(std::string input_file)
+{
     float r11, r12, r13, r21, r22, r23, r31, r32, r33, t1, t2, t3;
     float cx, cy, fx, fy, k1, k2, k3, k4, k5, k6, codx, cody, p1, p2;
     const k4a_calibration_intrinsic_parameters_t* params;
+    k4a_calibration_t calibration; // <>
+    k4a_playback_t playback = NULL;
+    k4a_result_t result;
     int returnCode = 1;
-    int timestamp;
+
+    // Open recording
+    result = k4a_playback_open(input_file.c_str(), &playback);
+    if (result != K4A_RESULT_SUCCEEDED || playback == NULL)
+    {
+        printf("Failed to open recording %s\n", input_file.c_str());
+        goto Exit;
+    }
+    // <> get calibration from playback
+    if (K4A_RESULT_SUCCEEDED != k4a_playback_get_calibration(playback, &calibration))
+    {
+        printf("Failed to get calibration\n");
+        goto Exit;
+    }
+
+    // CALIBRATION INFORMATION
+    printf("----------------------------\n");
+    printf("CALIBRATION INFORMATION:\n");
+    printf("----------------------------\n");
+    printf("DEPTH CAMERA INTRISTICS\n");
+    const k4a_calibration_camera_t depth_camera = calibration.depth_camera_calibration;
+    params = &depth_camera.intrinsics.parameters;
+    cx = params->param.cx;
+    cy = params->param.cy;
+    fx = params->param.fx;
+    fy = params->param.fy;
+    k1 = params->param.k1;
+    k2 = params->param.k2;
+    k3 = params->param.k3;
+    k4 = params->param.k4;
+    k5 = params->param.k5;
+    k6 = params->param.k6;
+    codx = params->param.codx; // center of distortion is set to 0 for Brown Conrady model
+    cody = params->param.cody;
+    p1 = params->param.p1;
+    p2 = params->param.p2;
+    printf("cx: %f\n", cx);
+    printf("cy: %f\n", cy);
+    printf("fx: %f\n", fx);
+    printf("fy: %f\n", fy);
+    printf("k1: %f\n", k1);
+    printf("k2: %f\n", k2);
+    printf("k3: %f\n", k3);
+    printf("k4: %f\n", k4);
+    printf("k5: %f\n", k5);
+    printf("k6: %f\n", k6);
+    printf("codx: %f\n", codx);
+    printf("cody: %f\n", cody);
+    printf("p1: %f\n", p1);
+    printf("p2: %f\n", p2);
+    printf("----------------------------\n");
+    printf("COLOR CAMERA INTRISTICS\n");
+    const k4a_calibration_camera_t color_camera = calibration.color_camera_calibration;
+    params = &color_camera.intrinsics.parameters;
+    cx = params->param.cx;
+    cy = params->param.cy;
+    fx = params->param.fx;
+    fy = params->param.fy;
+    k1 = params->param.k1;
+    k2 = params->param.k2;
+    k3 = params->param.k3;
+    k4 = params->param.k4;
+    k5 = params->param.k5;
+    k6 = params->param.k6;
+    codx = params->param.codx; // center of distortion is set to 0 for Brown Conrady model
+    cody = params->param.cody;
+    p1 = params->param.p1;
+    p2 = params->param.p2;
+    printf("cx: %f\n", cx);
+    printf("cy: %f\n", cy);
+    printf("fx: %f\n", fx);
+    printf("fy: %f\n", fy);
+    printf("k1: %f\n", k1);
+    printf("k2: %f\n", k2);
+    printf("k3: %f\n", k3);
+    printf("k4: %f\n", k4);
+    printf("k5: %f\n", k5);
+    printf("k6: %f\n", k6);
+    printf("codx: %f\n", codx);
+    printf("cody: %f\n", cody);
+    printf("p1: %f\n", p1);
+    printf("p2: %f\n", p2);
+    printf("----------------------------\n");
+    printf("COLOR CAMERA EXTRINSICS\n");
+    r11 = color_camera.extrinsics.rotation[0];
+    r12 = color_camera.extrinsics.rotation[1];
+    r13 = color_camera.extrinsics.rotation[2];
+    r21 = color_camera.extrinsics.rotation[3];
+    r22 = color_camera.extrinsics.rotation[4];
+    r23 = color_camera.extrinsics.rotation[5];
+    r31 = color_camera.extrinsics.rotation[6];
+    r32 = color_camera.extrinsics.rotation[7];
+    r33 = color_camera.extrinsics.rotation[8];
+    t1 = color_camera.extrinsics.translation[0];
+    t2 = color_camera.extrinsics.translation[1];
+    t3 = color_camera.extrinsics.translation[2];
+    printf("r11: %f\n", r11);
+    printf("r12: %f\n", r12);
+    printf("r13: %f\n", r13);
+    printf("r21: %f\n", r21);
+    printf("r22: %f\n", r22);
+    printf("r23: %f\n", r23);
+    printf("r31: %f\n", r31);
+    printf("r32: %f\n", r32);
+    printf("r33: %f\n", r33);
+    printf("t1: %f\n", t1);
+    printf("t2: %f\n", t2);
+    printf("t3: %f\n", t3);
+    printf("----------------------------\n");
+    returnCode = 0;
+
+Exit:
+    if (playback != NULL)
+    {
+        k4a_playback_close(playback);
+    }
+    return returnCode;
+}
+
+// Timestamp in milliseconds. Defaults to 1 sec as the first couple frames don't contain color
+static int framemode(std::string input_path, int fps, int timestampFrom = 1000, int timestampTo = 1000)
+{
+    /* Predef of params */
+    int returnCode = 1;
+    int timestamp; // current timestamp, should loop between timestampFrom and timestampTo
     k4a_playback_t playback = NULL;
     k4a_calibration_t calibration; // <>
     k4a_transformation_t transformation = NULL;
