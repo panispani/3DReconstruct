@@ -429,10 +429,9 @@ static int framemode(std::string input_path, int fps, int timestampFrom = 1000, 
     double now = (double)std::time(0);
     std::string assocFile;
     std::ofstream fout;
-    int fps = 20; // 30 fps
-    int tot = 0;
-
+    bool erroneous;
     std::string tmp = input_path + "out.mkv";
+
     // Open recording
     result = k4a_playback_open(tmp.c_str(), &playback);
     if (result != K4A_RESULT_SUCCEEDED || playback == NULL)
@@ -440,25 +439,36 @@ static int framemode(std::string input_path, int fps, int timestampFrom = 1000, 
         printf("Failed to open recording %s\n", input_path.c_str());
         goto Exit;
     }
+
+    // Pre-condition checks
+    if (timestampFrom < 1000)
+    {
+        printf("ERROR! Initial timestamp shuold be > 1000, but it's %d\n", timestampFrom);
+        printf("Execution will proceed, Undefined behavior!\n");
+    }
+    if (timestampTo < timestampFrom)
+    {
+        printf("ERROR! Final timestamp should be after the initial one but %d < %d!\n", timestampTo, timestampFrom);
+        goto Exit;
+    }
+    if (timestampTo > (int)(k4a_playback_get_recording_length_usec(playback) / 1000))
+    {
+        printf("ERROR! Final timestamp should be before the end of the video, but %d < %d!\n", timestampTo, (int)(k4a_playback_get_recording_length_usec(playback) / 1000));
+        goto Exit;
+    }
+
     // loop over timestamps
     assocFile = (std::string)input_path + "associations.txt";
     fout.open(assocFile);
-    timestamp = 1000;
+    timestamp = timestampFrom;
     result = k4a_playback_seek_timestamp(playback, timestamp * 1000, K4A_PLAYBACK_SEEK_BEGIN);
     // create rgb and depth directories
     // TODO, created for us in this case by python script
+    erroneous = true;
     while (result == K4A_RESULT_SUCCEEDED) {
         printf("Seeking to timestamp: %d/%d (ms)\n",
             timestamp,
             (int)(k4a_playback_get_recording_length_usec(playback) / 1000));
-
-        // result = k4a_playback_get_record_configuration(playback, &config);
-        // if (result != K4A_RESULT_SUCCEEDED)
-        // {
-        //     printf("Failed to get record config\n");
-        //     goto Exit;
-        // }
-        // printf("Is the IMU enabled: %d\n", config.imu_track_enabled);
 
         // Get next capture
         stream_result = k4a_playback_get_next_capture(playback, &capture);
@@ -516,7 +526,6 @@ static int framemode(std::string input_path, int fps, int timestampFrom = 1000, 
             goto Exit;
         }
 
-        // <>MAYBE HERE WE CAN REGISTER THE DEPTH AND RGB FRAMES
         tjhandle tjHandle;
         tjHandle = tjInitDecompress();
         if (tjDecompress2(tjHandle,
@@ -540,9 +549,8 @@ static int framemode(std::string input_path, int fps, int timestampFrom = 1000, 
         {
             printf("Failed to destroy turboJPEG handle\n");
         }
-        ///////////////////////////////
 
-        // THIS IS THE ONLY FUNCTION CALL THAT IS DIFFERENT IN THE TWO FUNCTIONS
+        ///////////////////////////////
         // Compute color point cloud by warping depth image into color camera geometry
         //if (point_cloud_depth_to_color(transformation, depth_image, uncompressed_color_image, output_filename) == false)
         std::string snow = std::to_string(now);
@@ -552,115 +560,22 @@ static int framemode(std::string input_path, int fps, int timestampFrom = 1000, 
             goto Exit;
         }
         fout << snow << " color/" << snow << ".png " << snow << " depth/" << snow << ".png" << std::endl;
-        printf("%f %d\n", now, timestamp);
         now += 1.0 / (double)fps;
         timestamp += round(1000.0 / (double)fps);
-        printf("%f %d\n", now, timestamp);
-        tot = tot + 1;
-        // save 1000 frames at most
-        if (tot > 1000) break;
+        if (timestamp > timestampTo)
+        {
+            erroneous = false;
+            break;
+        }
         result = k4a_playback_seek_timestamp(playback, 1000 * timestamp, K4A_PLAYBACK_SEEK_BEGIN);
     }
     fout.close();
-    printf("Failed to seek frame at %d seconds\n", timestamp / 1000);
-
-    // CALIBRATION INFORMATION
-    printf("----------------------------\n");
-    printf("CALIBRATION INFORMATION:\n");
-    printf("----------------------------\n");
-    printf("DEPTH CAMERA INTRISTICS\n");
-    const k4a_calibration_camera_t depth_camera = calibration.depth_camera_calibration;
-    params = &depth_camera.intrinsics.parameters;
-    cx = params->param.cx;
-    cy = params->param.cy;
-    fx = params->param.fx;
-    fy = params->param.fy;
-    k1 = params->param.k1;
-    k2 = params->param.k2;
-    k3 = params->param.k3;
-    k4 = params->param.k4;
-    k5 = params->param.k5;
-    k6 = params->param.k6;
-    codx = params->param.codx; // center of distortion is set to 0 for Brown Conrady model
-    cody = params->param.cody;
-    p1 = params->param.p1;
-    p2 = params->param.p2;
-    printf("cx: %f\n", cx);
-    printf("cy: %f\n", cy);
-    printf("fx: %f\n", fx);
-    printf("fy: %f\n", fy);
-    printf("k1: %f\n", k1);
-    printf("k2: %f\n", k2);
-    printf("k3: %f\n", k3);
-    printf("k4: %f\n", k4);
-    printf("k5: %f\n", k5);
-    printf("k6: %f\n", k6);
-    printf("codx: %f\n", codx);
-    printf("cody: %f\n", cody);
-    printf("p1: %f\n", p1);
-    printf("p2: %f\n", p2);
-    printf("----------------------------\n");
-    printf("COLOR CAMERA INTRISTICS\n");
-    const k4a_calibration_camera_t color_camera = calibration.color_camera_calibration;
-    params = &color_camera.intrinsics.parameters;
-    cx = params->param.cx;
-    cy = params->param.cy;
-    fx = params->param.fx;
-    fy = params->param.fy;
-    k1 = params->param.k1;
-    k2 = params->param.k2;
-    k3 = params->param.k3;
-    k4 = params->param.k4;
-    k5 = params->param.k5;
-    k6 = params->param.k6;
-    codx = params->param.codx; // center of distortion is set to 0 for Brown Conrady model
-    cody = params->param.cody;
-    p1 = params->param.p1;
-    p2 = params->param.p2;
-    printf("cx: %f\n", cx);
-    printf("cy: %f\n", cy);
-    printf("fx: %f\n", fx);
-    printf("fy: %f\n", fy);
-    printf("k1: %f\n", k1);
-    printf("k2: %f\n", k2);
-    printf("k3: %f\n", k3);
-    printf("k4: %f\n", k4);
-    printf("k5: %f\n", k5);
-    printf("k6: %f\n", k6);
-    printf("codx: %f\n", codx);
-    printf("cody: %f\n", cody);
-    printf("p1: %f\n", p1);
-    printf("p2: %f\n", p2);
-    printf("----------------------------\n");
-    printf("COLOR CAMERA EXTRINSICS\n");
-    r11 = color_camera.extrinsics.rotation[0];
-    r12 = color_camera.extrinsics.rotation[1];
-    r13 = color_camera.extrinsics.rotation[2];
-    r21 = color_camera.extrinsics.rotation[3];
-    r22 = color_camera.extrinsics.rotation[4];
-    r23 = color_camera.extrinsics.rotation[5];
-    r31 = color_camera.extrinsics.rotation[6];
-    r32 = color_camera.extrinsics.rotation[7];
-    r33 = color_camera.extrinsics.rotation[8];
-    t1 = color_camera.extrinsics.translation[0];
-    t2 = color_camera.extrinsics.translation[1];
-    t3 = color_camera.extrinsics.translation[2];
-    printf("r11: %f\n", r11);
-    printf("r12: %f\n", r12);
-    printf("r13: %f\n", r13);
-    printf("r21: %f\n", r21);
-    printf("r22: %f\n", r22);
-    printf("r23: %f\n", r23);
-    printf("r31: %f\n", r31);
-    printf("r32: %f\n", r32);
-    printf("r33: %f\n", r33);
-    printf("t1: %f\n", t1);
-    printf("t2: %f\n", t2);
-    printf("t3: %f\n", t3);
-    printf("----------------------------\n");
-
+    if (erroneous)
+    {
+        printf("Failed to seek frame at %d seconds\n", timestamp / 1000);
+    }
+    printf("Finished saving frames!\n");
     returnCode = 0;
-
 Exit:
     if (playback != NULL)
     {
@@ -767,7 +682,7 @@ int main(int argc, char** argv)
             printf("FRAME MODE\n");
             if (argc == 6)
             {
-                // returnCode = framemode(argv[2], argv[3], argv[4], argv[5]);
+                returnCode = framemode(std::string(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]));
             }
             else
             {
@@ -780,6 +695,18 @@ int main(int argc, char** argv)
             if (argc == 6)
             {
                 // returnCode = imumode();
+            }
+            else
+            {
+                print_usage();
+            }
+        }
+        else if (mode == "calibration")
+        {
+            printf("CALIBRATION INFORMATION MODE\n");
+            if (argc == 3)
+            {
+                returnCode = print_calibration_information(std::string(argv[2]));
             }
             else
             {
