@@ -87,16 +87,17 @@ DESCRIPTION
     Save the pointcloud of an RGB-D video at a specific timestamp
 USAGE
 
-    ./vid2dataset.exe pointcloud <out.mkv> <timestamp>
+    ./vid2dataset.exe pointcloud <directory> <timestamp>
 ARGUMENTS
 
-    <out.mkv>: Provide the path to a video file (must be RGB-D, include both RGB and Depth tracks)
+    <directory>: A directory including the input video named EXACTLY 'out.mkv'. The output pointcloud gets saved here as well. The input video must be RGB-D, include both RGB and Depth tracks. \n\
     <timestamp>: Timestamp in milliseconds (1 second = 1000 milliseconds)
-    IMPORTANT: The least amount for the timestamp should be 1000 (1 second) because the first few frames from Kinect have no color
+    (<outputPointCloudFilename>): Optionally provide the name of the output pointcloud finalename, defaults to output.ply
+    IMPORTANT: The least value for the timestamp should be 1000 (1 second) because the first few frames from Kinect have no color
 EXAMPLE
 
     Save the pointcloud at 2.5 seconds
-    ./vid2dataset.exe pointcloud ../recordings/ball/scan1/out.mkv 2500
+    ./vid2dataset.exe pointcloud ../recordings/ball/scan1/ 2500
 
 *-FRAME MODE*
 
