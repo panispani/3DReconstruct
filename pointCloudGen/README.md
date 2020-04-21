@@ -121,6 +121,23 @@ EXAMPLE
     Save the corresponding RGB and D frames from 1.3 to 2.5 at 10 fps
     ./vid2dataset.exe frame ../recordings/ball/scan1/ 10 1300 2500
 
+*-CALIBRATION INFORMATION MODE*
+
+DESCRIPTION
+
+    Given an RGB-D video, print the calibration information of the RGB and Depth cameras used to capture each of the tracks.
+    Prints COLOR and DEPTH camera intrinsics as well as COLOR camera extrinsics. Note: We don't print DEPTH camera extrinsics because for Azure Kinect it's considered to be the origin with identity rotation matrix.
+USAGE
+
+    ./vid2dataset.exe calibration <out.mkv>
+ARGUMENTS
+
+    <out.mkv>: Provide the path to a video file (must be RGB-D, include both RGB, and Depth tracks)
+EXAMPLE
+
+    Print calibration information
+    ./vid2dataset.exe calibration ../recordings/ball/scan1/out.mkv
+
 *-IMU MODE (NOT IMPLEMENTED YET)*
 
 DESCRIPTION
