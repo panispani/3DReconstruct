@@ -617,14 +617,33 @@ int main(int argc, char** argv)
         if (mode == "pointcloud")
         {
             printf("POINTCLOUD MODE\n");
-            returnCode = pointcloudmode(argv[3]);
+            if (argc == 4)
+            {
+                returnCode = pointcloudmode(std::string(argv[2]), atoi(argv[3]));
+            }
+            else
+            {
+                print_usage();
+            }
         }
         else if (mode == "frame")
         {
             printf("FRAME MODE\n");
-            if (argc == 3)
+            if (argc == 6)
             {
-                returnCode = framemode(argv[2]);
+                // returnCode = framemode(argv[2], argv[3], argv[4], argv[5]);
+            }
+            else
+            {
+                print_usage();
+            }
+        }
+        else if (mode == "imu")
+        {
+            printf("IMU MODE\n");
+            if (argc == 6)
+            {
+                // returnCode = imumode();
             }
             else
             {
