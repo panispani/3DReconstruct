@@ -269,10 +269,10 @@ Exit:
         k4a_transformation_destroy(transformation);
     }
     return returnCode;
+    return 0;
 }
 
 // Timestamp in milliseconds. Defaults to 1 sec as the first couple frames don't contain color
-//static int pointcloudmode(char* input_path, int timestamp = 1000, std::string output_filename = "output.ply")
 static int framemode(std::string input_path)
 {
     /* Predef of params */
@@ -556,11 +556,51 @@ Exit:
 /* DONT READ, NOT IMPORTANT FOR IMPLEMENTATION */
 static void print_usage()
 {
-    printf("To convert a 5fps video out.mkv to a dataset of synced and registered frames\n");
-    printf("Usage: vid2dataset frames [directory_including_video]\n");
-    printf("To convert a 5fps video out.mkv to a point cloud given camera trajectory information\n");
-    printf("Usage: vid2dataset pointcloud [camera_trajectory_file] [directory_including_video]\n");
-    printf("Note: out.mkv videos need to have depth and rgb channels. The frames and point clouds are saved in the same directory as out.mkv\n");
+    std::string DOCSTRING = "USAGE\n\n\
+    -POINTCLOUD MODE \n\
+    DESCRIPTION \n\
+      Save the pointcloud of a RGB-D video of at specific timestamp \n\
+    USAGE \n\
+      ./vid2dataset.exe pointcloud <directory> <timestamp> \n\
+    ARGUMENTS \n\
+      <directory>: A directory including the input video named EXACTLY 'out.mkv'. The output pointcloud gets saved here as well. The input video must be RGB-D, include both RGB and Depth tracks. \n\
+      <timestamp>: Timestamp in milliseconds (1 second = 1000 milliseconds) \n\
+      IMPORTANT: The least value for the timestamp should be 1000 (1 second) because the first few frames from Kinect have no color \n\
+    EXAMPLE: \n\
+      Save the pointcloud at 2.5 seconds \n\
+      ./vid2dataset.exe pointcloud ../recordings/ball/scan1/ 2500 \n\n\
+    -FRAME MODE \n\
+    DESCRIPTION \n\
+      Save a sequence of corresponding RGB and Depth frames given a start and end time as well as the desired fps. \n\
+      This mode saves matching frames in 2 directories depth/ and color/ (which need to pre-exist) and saves their correspondences in a file called 'associations.txt' \n\
+      This mode exists so that the frames are then fed to a SLAM algorithm. \n\
+      This algorithm could also be embedded in this executable in the future removing the need to save the frames on the disk. \n\
+    USAGE \n\
+      ./vid2dataset.exe frame <directory> <fps> <timestampFrom> <timestampTo> \n\
+    ARGUMENTS \n\
+      <directory>: A directory including the input video named EXACTLY 'out.mkv' AND including 2 empty directories named 'color' and 'depth' to store the corresponding frames. 'associations.txt' gets save here as well. \n\
+      <fps>: The desired frames-per-second \n\
+      <timestampFrom>: Starting timestamp in milliseconds (1 second = 1000 milliseconds). Minimum value = 1000 (1 second) because the first few frames from Kinect have no color \n\
+      <timestampTo>: Ending timestamp in milliseconds (1 second = 1000 milliseconds). This should be after the <timestampFrom> and before the end of the video! \n\
+    EXAMPLE: \n\
+      Save the corresponding RGB and D frames from 1.3 to 2.5 at 10 fps \n\
+      ./vid2dataset.exe frame ../recordings/ball/scan1/ 10 1300 2500 \n\n\
+    -IMU MODE \n\
+    DESCRIPTION \n\
+      Given a desired FPS, this mode translates each frame to a point cloud and using the IMU (accelerometer and gyrometer) combines all the pointclouds on the same coordinate frame. \n\
+      WARNING: Using a high FPS or a big time frame can result in huge files! \n\
+    USAGE \n\
+      ./vid2dataset.exe imu <out.mkv> <fps> <timestampFrom> <timestampTo> \n\
+    ARGUMENTS \n\
+      <out.mkv>: Provide the path to a video file (must be RGB-D with IMU data, include both RGB, Depth and IMU tracks) \n\
+      <fps>: The desired frames-per-second \n\
+      <timestampFrom>: Starting timestamp in m illiseconds (1 second = 1000 milliseconds). Minimum value = 1000 (1 second) because the first few frames from Kinect have no color \n\
+      <timestampTo>: Ending timestamp in milliseconds (1 second = 1000 milliseconds). This should be after the <timestampFrom> and before the end of the video! \n\
+    EXAMPLE: \n\
+      Create a pointcloud mesh from all the frames from 2 to 6.7 seconds at 10 frames-per-second \n\
+      ./vid2dataset.exe imu ../recordings/ball/scan1/out.mkv 10 2000 6700 \n\n\
+    MAC and Linux users: Believe in yourself and compile everything from scratch.. or use a VM\n";
+    printf("%s", DOCSTRING.c_str());
 }
 
 int main(int argc, char** argv)
