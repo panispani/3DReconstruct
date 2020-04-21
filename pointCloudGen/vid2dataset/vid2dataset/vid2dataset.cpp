@@ -636,6 +636,17 @@ static void print_usage()
     EXAMPLE: \n\
       Save the corresponding RGB and D frames from 1.3 to 2.5 at 10 fps \n\
       ./vid2dataset.exe frame ../recordings/ball/scan1/ 10 1300 2500 \n\n\
+    -CALIBRATION INFORMATION MODE \n\
+    DESCRIPTION \n\
+      Given an RGB-D video, print the calibration information of the RGB and Depth cameras used to capture each of the tracks. \n\
+      Prints COLOR and DEPTH camera intrinsics as well as COLOR camera extrinsics. Note: We don't print DEPTH camera extrinsics because for Azure Kinect it's considered to be the origin with identity rotation matrix. \n\
+    USAGE \n\
+        ./vid2dataset.exe calibration <out.mkv> \n\
+    ARGUMENTS \n\
+        <out.mkv>: Provide the path to a video file (must be RGB-D, include both RGB, and Depth tracks) \n\
+    EXAMPLE \n\
+        Print calibration information \n\
+        ./vid2dataset.exe calibration ../recordings/ball/scan1/out.mkv \n\n\
     -IMU MODE \n\
     DESCRIPTION \n\
       Given a desired FPS, this mode translates each frame to a point cloud and using the IMU (accelerometer and gyrometer) combines all the pointclouds on the same coordinate frame. \n\
