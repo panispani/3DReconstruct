@@ -32,13 +32,13 @@ Dependencies: open3d library
 
 ## Depth error compensation
 
-Training data generation source code: [bias correction/april_generate_traiing_data.ipynb](bias correction/april_generate_traiing_data.ipynb]), [bias correction/RF_april_generate_traiing_data.ipynb](bias correction/RF_april_generate_traiing_data.ipynb)
+Training data generation source code: [biasCorrection/april_generate_traiing_data.ipynb](biasCorrection/april_generate_traiing_data.ipynb]), [biasCorrection/RF_april_generate_traiing_data.ipynb](biasCorrection/RF_april_generate_traiing_data.ipynb)
 
 Learning source code: 
 
-Random Forest: [bias correction/training_RF.ipynb](bias correction/training_RF.ipynb)
+Random Forest: [biasCorrection/training_RF.ipynb](biasCorrection/training_RF.ipynb)
 
-Neural Network: [bias correction/training.ipynb](bias correction/training.ipynb)
+Neural Network: [biasCorrection/training.ipynb](biasCorrection/training.ipynb)
 
 Dependencies: open3d, AprilTag (https://github.com/AprilRobotics/apriltag), tensorflow, sklearn
 
