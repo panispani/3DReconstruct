@@ -32,7 +32,7 @@ Dependencies: open3d library
 
 ## Depth error compensation
 
-Training data generation source code: [bias correction/generate_training_data.ipynb](bias correction/generate_training_data.ipynb]), [bias correction/RF_april_generate_training_data.ipynb](bias correction/RF_april_generate_training_data.ipynb)
+Training data generation source code: [bias correction/april_generate_traiing_data.ipynb](bias correction/april_generate_traiing_data.ipynb]), [bias correction/RF_april_generate_traiing_data.ipynb](bias correction/RF_april_generate_traiing_data.ipynb)
 
 Learning source code: 
 
