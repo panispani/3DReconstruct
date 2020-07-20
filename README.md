@@ -7,7 +7,7 @@ See README.md at *pointCloudGen/README.md*. [Link](pointCloudGen/README.md)
 
 ## Background removal
 
-Source code: "backgroundRemoval/backgroundremovel.ipynb"
+Source code: [backgroundRemoval/backgroundremovel.ipynb](backgroundRemoval/backgroundremovel.ipynb)
 
 Dependencies: open3d library
 
@@ -32,7 +32,7 @@ Dependencies: open3d library
 
 ## Depth error compensation
 
-Training data generation source code: [bias correction/generate_traiing_data.ipynb](bias correction/generate_traiing_data.ipynb]), [bias correction/generate_traiing_data.ipynb](bias correction/generate_traiing_data.ipynb)
+Training data generation source code: [bias correction/generate_training_data.ipynb](bias correction/generate_training_data.ipynb]), [bias correction/RF_april_generate_training_data.ipynb](bias correction/RF_april_generate_training_data.ipynb)
 
 Learning source code: 
 
@@ -56,6 +56,8 @@ Setup other libraries:
 
 ```
 pip install open3d
+pip install tensorflow==2.0.0-rc1
+pip install sklearn
 
 ```
 
