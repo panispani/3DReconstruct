@@ -3,7 +3,7 @@
 The whole framework is the post/preprocess of BADSLAM (https://github.com/ETH3D/badslam) mapping result.
 
 ## Point Cloud generation
-See README.md at *pointCloudGen/README.md*. [Link](pointCloudGen/README.md)
+See README.md at [pointCloudGen/README.md](pointCloudGen/README.md)
 
 ## Background removal
 
