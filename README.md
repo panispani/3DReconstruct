@@ -26,7 +26,7 @@ Dependencies: open3d library
 
 ## Surface Reconstruction
 
-Source code: [MeshRcon/Mesh_recon.py](MeshRcon/Mesh_recon.py)
+Source code: [MeshRecon/Mesh_recon.py](MeshRecon/Mesh_recon.py)
 
 Dependencies: open3d library
 
