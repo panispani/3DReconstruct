@@ -7,7 +7,7 @@ See README.md at *pointCloudGen/README.md*. [Link](pointCloudGen/README.md)
 
 ## Background removal
 
-Source code: [backgroundRemoval/backgroundremovel.ipynb](backgroundRemoval/backgroundremovel.ipynb)
+Source code: [backgroundRemoval/backgroundremoval.ipynb](backgroundRemoval/backgroundremoval.ipynb)
 
 Dependencies: open3d library
 
